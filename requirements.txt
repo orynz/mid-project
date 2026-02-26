@@ -1,0 +1,27 @@
+# Core API
+fastapi
+uvicorn
+
+# Frontend
+streamlit
+
+# LangChain Ecosystem
+langchain
+langchain-community
+langchain-openai
+langgraph
+langsmith
+
+# Data & Scraping
+youtube-transcript-api
+yt-dlp
+tavily-python
+
+# DB
+chromadb
+
+# Utils
+pydantic
+pydantic-settings
+python-dotenv
+httpx
