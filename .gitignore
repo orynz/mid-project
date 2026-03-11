@@ -334,3 +334,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/python,dotenv,firebase,visualstudiocode,windows,linux,macos,ruby
+
+cookies.txt
+*.wav
+*.mp3
+00_basic
+docs
