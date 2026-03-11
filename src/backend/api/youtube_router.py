@@ -21,6 +21,20 @@ class TranscriptRequest(BaseModel):
     transcript: str
 
 
+class RagRequest(BaseModel):
+    """
+    RAG 검색 API 요청 모델
+    """
+    video_url: str = ""
+    question: str
+    video_id: str = ""
+
+class GlobalRagRequest(BaseModel):
+    """
+    글로벌 RAG 검색 API 요청 모델
+    """
+    question: str
+
 @router.post("/search/{query}", response_model=list[YouTubeInfo])
 async def get_video_infos(query: str):
     """
@@ -31,14 +45,12 @@ async def get_video_infos(query: str):
         raise HTTPException(status_code=400, detail=validation["reason"])
     return await yt.get_video_list(query=query)
 
-
 @router.post("/summarize/{transcript}", response_model=None)
 async def get_video_summarize(transcript: str):
     """
     영상 스크립트를 기반으로 요약
     """
     return llm.summarize(content_category="IT", transcript=transcript, max_words=300)
-
 
 @router.post("/timeline-summary")
 async def get_timeline_summary(req: TranscriptRequest):
@@ -50,7 +62,6 @@ async def get_timeline_summary(req: TranscriptRequest):
         raise HTTPException(status_code=400, detail="자막 데이터가 비어 있습니다.")
     return llm.timeline_summarize(transcript_data=req.transcript)
 
-
 @router.post("/quiz")
 async def get_quiz(req: TranscriptRequest):
     """
@@ -60,7 +71,6 @@ async def get_quiz(req: TranscriptRequest):
         raise HTTPException(status_code=400, detail="자막 데이터가 비어 있습니다.")
     return llm.generate_quiz(transcript_data=req.transcript)
 
-
 @router.post("/lecture-note")
 async def get_lecture_note(req: TranscriptRequest):
     """
@@ -69,3 +79,41 @@ async def get_lecture_note(req: TranscriptRequest):
     if not req.transcript.strip():
         raise HTTPException(status_code=400, detail="자막 데이터가 비어 있습니다.")
     return llm.generate_lecture_note(transcript_data=req.transcript)
+
+@router.post("/rag")
+async def ask_rag(req: RagRequest):
+    """
+    RAG 파이프라인 Q&A 처리를 위한 백엔드 엔드포인트
+    """
+    from vector.vector_db import get_rag_answer, index_video_transcript
+    
+    if not req.question.strip():
+        raise HTTPException(status_code=400, detail="질문(question)이 필요합니다.")
+    
+    # 1) 로컬 자막 파일 확인 (없으면 Whisper STT로 생성) 및 인덱싱
+    try:
+        transcript_data = await yt.async_get_video_transcribe_with_stt(req.video_id)
+        if transcript_data:
+            index_video_transcript(req.video_id, transcript_data)
+        else:
+            print(f"[{req.video_id}] 자막 데이터를 생성/로드하지 못했습니다.")
+    except Exception as e:
+        print(f"자막 인덱싱 실패: {e}")
+            
+    # 2) RAG 파이프라인 연동
+    answer = get_rag_answer(query=req.question, video_id=req.video_id)
+    return {"answer": answer}
+
+@router.post("/rag/global")
+async def ask_global_rag(req: GlobalRagRequest):
+    """
+    모든 인덱싱된 영상을 대상으로 RAG 검색 수행 (Global Knowledge Base)
+    """
+    from vector.vector_db import get_global_rag_recommendation
+    
+    if not req.question.strip():
+        raise HTTPException(status_code=400, detail="질문(question)이 필요합니다.")
+        
+    result = get_global_rag_recommendation(query=req.question, k=5)
+    
+    return result

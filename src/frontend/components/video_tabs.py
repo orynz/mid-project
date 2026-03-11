@@ -161,9 +161,32 @@ def render_note_tab(info):
     else:
         st.info("버튼을 눌러 학습 노트를 생성해보세요.")
 
+def render_rag_tab(info):
+    st.subheader("🤖 의미 기반 검색 (RAG)")
+    st.write("해당 영상의 자막 내용을 바탕으로 궁금한 점을 직접 물어보세요.")
+    
+    rag_question = st.text_input("질문 내용", placeholder="이 영상의 핵심은 무엇인가요?", key=f"rag_question_{info.video_id}")
+    
+    if st.button("검색 진행", key=f"btn_rag_{info.video_id}"):
+        if not rag_question:
+            st.warning("질문을 입력해주세요.")
+        else:
+            with st.spinner("🧠 관련된 내용을 검색하고 답변을 생성하는 중입니다..."):
+                payload = {"video_url": "", "question": rag_question, "video_id": info.video_id}
+                try:
+                    rag_res = requests.post(f"{API_URL}/video/rag", json=payload)
+                    if rag_res.status_code == 200:
+                        rag_data = rag_res.json()
+                        st.success("✨ 분석이 완료되었습니다!")
+                        st.markdown(f"**답변:**\n\n{rag_data.get('answer', '답변을 생성하지 못했습니다.')}")
+                    else:
+                        st.warning(f"검색 중 문제가 발생했습니다: {rag_res.text}")
+                except requests.exceptions.ConnectionError:
+                    st.error("백엔드 서버에 연결할 수 없습니다.")
+
 def render_video_tabs(info):
-    tab0, tab1, tab2, tab3, tab4 = st.tabs(
-        ["설명", "인사이트", "타임라인", "퀴즈/과제", "학습노트"]
+    tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs(
+        ["설명", "인사이트", "타임라인", "의미기반 검색", "퀴즈/과제", "학습노트"]
     )
     with tab0:
         render_description_tab(info)
@@ -172,6 +195,8 @@ def render_video_tabs(info):
     with tab2:
         render_timeline_tab(info)
     with tab3:
-        render_quiz_tab(info)
+        render_rag_tab(info)
     with tab4:
+        render_quiz_tab(info)
+    with tab5:
         render_note_tab(info)
