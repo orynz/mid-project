@@ -12,6 +12,25 @@ def init_session_state():
         st.session_state.top_search_input = ""
     if "pending_search" not in st.session_state:
         st.session_state.pending_search = ""
+    if "last_query" not in st.session_state:
+        st.session_state.last_query = ""
+    if "search_history" not in st.session_state:
+        st.session_state.search_history = []
+    if "global_rag_data" not in st.session_state:
+        st.session_state.global_rag_data = None
+    if "current_video" not in st.session_state:
+        st.session_state.current_video = None
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "home"
+
+    # URL 쿼리 파라미터에서 't'가 있으면 영상 시작 시간 설정
+    if "t" in st.query_params:
+        try:
+            st.session_state.video_start_time = int(st.query_params["t"])
+            # 리런 시 반복 점프 방지를 위해 't' 파라미터만 제거
+            st.query_params.pop("t", None)
+        except (ValueError, Exception):
+            pass
 
 def change_video(selected_video):
     """추천 영상 카드를 클릭했을 때 즉시 상태를 업데이트하는 콜백 함수"""

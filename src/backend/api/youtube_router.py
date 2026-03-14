@@ -1,8 +1,8 @@
 from shared.youtube_schema import (
     YouTubeInfo,
-    YouTubeMetaData,
-    YouTubeTimeLineTranscribe,
-    YouTubeFullDetail,
+    # YouTubeMetaData,
+    # YouTubeTimeLineTranscribe,
+    # YouTubeFullDetail,
 )
 from pydantic import BaseModel
 from agents import graph as llm
@@ -45,12 +45,6 @@ async def get_video_infos(query: str):
         raise HTTPException(status_code=400, detail=validation["reason"])
     return await yt.get_video_list(query=query)
 
-@router.post("/summarize/{transcript}", response_model=None)
-async def get_video_summarize(transcript: str):
-    """
-    영상 스크립트를 기반으로 요약
-    """
-    return llm.summarize(content_category="IT", transcript=transcript, max_words=300)
 
 @router.post("/timeline-summary")
 async def get_timeline_summary(req: TranscriptRequest):
@@ -104,8 +98,8 @@ async def ask_rag(req: RagRequest):
     answer = get_rag_answer(query=req.question, video_id=req.video_id)
     return {"answer": answer}
 
-@router.post("/rag/global")
-async def ask_global_rag(req: GlobalRagRequest):
+@router.post("/global-recommend")
+async def ask_global_recommend(req: GlobalRagRequest):
     """
     모든 인덱싱된 영상을 대상으로 RAG 검색 수행 (Global Knowledge Base)
     """
@@ -116,4 +110,5 @@ async def ask_global_rag(req: GlobalRagRequest):
         
     result = get_global_rag_recommendation(query=req.question, k=5)
     
-    return result
+    # 프론트엔드 사이드바에서 기대하는 키 'recommendation'으로 반환
+    return {"recommendation": result.get("answer", "추천을 생성할 수 없습니다.")}

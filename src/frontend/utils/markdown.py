@@ -1,18 +1,60 @@
+import re
+import streamlit as st
+from utils.state_manager import set_video_time
+
+
+def convert_timestamps_to_links(text: str, key_prefix: str = "ts"):
+    """
+    [MM:SS] 또는 [HH:MM:SS] 형식의 타임스탬프를 Streamlit 버튼으로 변환하여 렌더링합니다.
+    [time] **title** 형식이면 버튼 라벨에 제목을 포함합니다.
+    """
+    # 타임스탬프와 뒤따르는 선택적 제목 패턴 (**제목**)
+    pattern = r"\[(\d{1,2}(?::\d{1,2})?:\d{2})\](?:\s*\*\*(.*?)\*\*)?"
+
+    # 텍스트를 패턴 기준으로 분할 (그룹 1: 시간, 그룹 2: 제목)
+    parts = re.split(pattern, text)
+
+    # re.split에 2개의 괄호 그룹이 있으므로, 각 매칭마다 [텍스트, 그룹1, 그룹2] 순으로 요소가 들어감
+    # 따라서 i=0(텍스트), i+1(시간), i+2(제목) 순서로 접근
+    for i in range(0, len(parts), 3):
+        # 1. 일반 텍스트 부분 출력
+        if i < len(parts) and parts[i] and parts[i].strip():
+            st.markdown(parts[i])
+
+        # 2. 타임스탬프 버튼 부분 출력
+        if i + 1 < len(parts):
+            time_str = parts[i + 1]
+            title_str = parts[i + 2] if i + 2 < len(parts) and parts[i + 2] else None
+
+            # 버튼 라벨 구성: f"▶ [{time_str}] | {title}"
+            label = f"▶ [{time_str}]"
+            if title_str:
+                label += f" | {title_str.strip()}"
+
+            st.button(
+                label,
+                key=f"btn_{key_prefix}_{time_str}_{i}",
+                type="tertiary",
+                on_click=set_video_time,
+                args=(time_str,),
+            )
+
+
 def dict_to_markdown_quiz(data: dict) -> str:
     if "error" in data:
         return data["error"]
-    md = "### 📝 퀴즈 및 도전과제\n\n"
+    md = "#### 📝 퀴즈 및 도전과제\n\n"
     if "questions" in data:
         for i, q in enumerate(data.get("questions", []), 1):
-            md += f"#### Q{i}. {q.get('question', '')}\n\n"
+            md += f"###### Q{i}. {q.get('question', '')}\n\n"
             for j, opt in enumerate(q.get("options", []), 1):
                 md += f"{j}. {opt}\n"
             md += f"\n**정답 및 해설:**\n{q.get('answer', '')}\n\n---\n\n"
 
     if "challenge" in data:
-        md += "### 🚀 도전 과제\n\n"
+        md += "#### 🚀 도전 과제\n\n"
         for i, c in enumerate(data.get("challenge", []), 1):
-            md += f"#### Challenge {i}\n\n**문제:**\n{c.get('question', '')}\n\n**예시 답안:**\n{c.get('answer', '')}\n\n"
+            md += f"###### Challenge {i}\n\n**문제:**\n{c.get('question', '')}\n\n**예시 답안:**\n{c.get('answer', '')}\n\n"
     return md
 
 

@@ -2,44 +2,28 @@ from typing import Literal
 import time
 
 template = """
-Role: Strict 1:1 IT AI Tutor
-Task: Gen IT/Prog test based on [Input].
-Lang: Korean
-Out: FINAL QUIZ ONLY.
+# Role: Strict 1:1 IT AI Tutor
+# Task: Gen IT/Prog quiz from [Input]. Language: Korean.
+# Constraints: Output ONLY FINAL JSON. All code MUST use Markdown blocks (e.g., ```). 
 
-Args:
-- Diff: {difficulty} (Low: MCQ/blank | Mid: apply | High: eval/optimize)
-- N: {num_questions}
-- Date: {current_date}
+# Args: {difficulty} (Low: MCQ/Blank | Mid: Apply | High: Eval/Opt), {num_questions}, {current_date}.
 
-Flow (Silent):
-1. Topic: Extract core IT/Prog concept.
-2. Draft: N Qs matching Diff. If Chal: +1 Code/Algo Q.
-3. Verify: Concepts from [Material] BUT universally solvable via general IT knowledge (Strictly NO material-specific trivia).
-4. Rule for Chal: MUST provide explicit sample datasets/conditions in "question" (NO vague references). "answer" MUST be a complete functioning code block.
+# Flow:
+1. Extract core IT/Prog concepts.
+2. Draft {num_questions} Qs by {difficulty}. High Diff: Add +1 Code/Algo Q.
+3. Verification: Solve via general IT knowledge; NO material-specific trivia.
+4. Code/Algo Rule: Qs MUST include explicit datasets/conditions. "answer" MUST be a functioning code block.
 
-JSON Output Schema:
+# Output Schema (JSON):
 {{
-  "metadata": {{
-    "created_at": "{current_date}",
-    "difficulty": "{difficulty}"
-  }},
-  "questions": [
-    {{
-      "question": "Detailed question (use \n for line breaks)",
-      "options": ["Opt1", "Opt2", "Opt3", "Opt4"],
-      "answer": "Exact answer and detailed reasoning based on lecture"
-    }}
-  ]
-  "challenge": [
-      {{
-          "question": "Code/Algo Q. Include CONCRETE input/output data & strict conditions (use \n for line breaks and Markdown)",
-          "answer": "Complete code block solution (use \n for line breaks and Markdown)"
-      }}
-  ]
+  "metadata": {{"created_at": "{current_date}", "difficulty": "{difficulty}"}},
+  "questions": [{{
+    "question": "Text", "options": ["0","1","2","3"], "answer": "option no.", "explanation": "Logic"
+  }}],
+  "challenge": [{{
+    "question": "Code/Algo Q (Strict constraints/IO and use \n for line breaks)", "answer": "Full Code Block"
+  }}]
 }}
-
-[Input]: {lecture_content}
 """
 
 def generate_prompt(

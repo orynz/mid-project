@@ -10,39 +10,33 @@ def render_recommended_videos():
 
     for i, info in enumerate(st.session_state.recommended_videos):
         with cols[i % 3]: 
-            is_selected = st.session_state.selected_video.video_id == info.video_id
-
             with st.container(border=True):
-                st.image(
-                    f"https://img.youtube.com/vi/{info.video_id}/0.jpg", width="stretch"
-                )
+                is_selected = st.session_state.selected_video.video_id == info.video_id
+                
+                # Duration formatting
+                duration_str = str(timedelta(seconds=info.duration)) if info.duration else "N/A"
+                
+                # Title truncation
+                display_title = info.title if len(info.title) <= 45 else info.title[:42] + "..."
 
-                display_title = (
-                    info.title if len(info.title) <= 45 else info.title[:43] + "..."
-                )
-                st.markdown(f"**{display_title}**")
+                # Render Premium Card using Markdown for styling
+                st.markdown(f"""
+                <div class="video-card">
+                    <img src="https://img.youtube.com/vi/{info.video_id}/mqdefault.jpg" style="width:100%">
+                    <div style="font-weight:700; font-size:1rem; margin-bottom:4px; height:3em; overflow:hidden;">{display_title}</div>
+                    <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:8px;">
+                        👤 {info.channel_name} <br> ⏱️ {duration_str}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                duration_str = (
-                    str(timedelta(seconds=info.duration))
-                    if info.duration
-                    else "알 수 없음"
-                )
-                st.caption(f"👤 **{info.channel_name}** | ⏱️ {duration_str}")
-
-                if info.tags:
-                    tags_html = " ".join([f"`#{tag}`" for tag in info.tags[:5]])
-                    st.markdown(tags_html)
-                else:
-                    st.markdown("Unknown")
-
-                button_type = "primary" if is_selected else "secondary"
-                button_label = "✅ 선택 영상" if is_selected else "▶️ 재생하기"
-
+                # Button for interaction (Button must be outside the markdown for click handling)
+                button_label = "✅ 선택됨" if is_selected else "▶️ 강의 시청"
                 st.button(
                     button_label,
                     key=f"btn_{info.video_id}",
-                    type=button_type,
-                    use_container_width=True,
+                    type="primary" if is_selected else "secondary",
+                    width="stretch",
                     on_click=change_video,
                     args=(info,),
                 )

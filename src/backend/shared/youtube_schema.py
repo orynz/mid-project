@@ -22,6 +22,8 @@ class YouTubeInfo(BaseModel):
     video_id: str = Field(description="영상 id")
     title: str = Field(description="영상 제목")
     url: str = Field(description="영상 url")
+    viewCount: int = Field(description="조회수")
+    likeCount: int = Field(description="좋아요 수")
     channel_name: str = Field(description="채널")
     description: str = Field(description="설명")
     duration: int = Field(description="유튜브 영상 길이")
@@ -30,6 +32,9 @@ class YouTubeInfo(BaseModel):
     tags: List[str] = Field(default_factory=list, description="태그 목록")
     time_subtitle: List[SubtitleItem] = Field(description="타임 자막", default=[])
 
+    def show_data(self):
+        print(f'{self.video_id} | {self.likeCount}')
+        
     def get_full_transcript(self) -> str:
         """자막 텍스트를 반환
         
@@ -91,16 +96,7 @@ class YouTubeInfo(BaseModel):
             "timeline":timeline,
             "cta": cta
         }
-
-class YouTubeMetaData(YouTubeInfo):
-    """유튜브 메타 정보"""
-    # channel_name: str = Field(description="채널")
-    # description: str = Field(description="설명")
-    # thumbnail_url: Optional[str] = Field(default=None, description="썸네일")
-    # chapters: List[ChapterItem] = Field(default_factory=list, description="챕터 목록")
-    # tags: List[str] = Field(default_factory=list, description="태그 목록")
-    test: Optional[str] = Field(default=None, description="썸네일")
-    
+        
 class YouTubeTimeLineTranscribe(BaseModel):
     """유튜브 타임라인 자막 정보"""
     # lang:str = Field(description="언어")
@@ -113,22 +109,3 @@ class YouTubeTimeLineTranscribe(BaseModel):
             str: 타임라인 기반 자막 텍스트 예 - "00:00) 안녕하세요."
         """
         return "\n".join(f"{line.start}) {line.text}" for line in self.time_subtitle)
-
-
-    
-class YouTubeFullDetail(YouTubeMetaData):
-    """유튜브 메타정보, 챕터, 자막을 모두 포함하는 종합 데이터"""
-    
-    timeLine_transcribe:YouTubeTimeLineTranscribe = Field(description="타임라인 자막 - {'start': '00:00', 'text': '안녕하세요.'} ")
-    
-    def get_full_transcript(self) -> str:
-        """자막 텍스트를 반환
-
-        Returns:
-            str: 타임라인 기반 자막 텍스트 예 - "00:00) 안녕하세요."
-        """
-        full_text = ""
-        transcribe = self.timeLine_transcribe
-        for line in transcribe.time_subtitle:
-            full_text += f"{line['start']}) {line['text']}\n"
-        return full_text

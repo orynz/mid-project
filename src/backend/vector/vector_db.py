@@ -109,7 +109,7 @@ def get_rag_answer(query: str, video_id: str) -> str:
         "사용자의 질문에 대해 아래에 제공된 영상 자막 문맥만을 기반으로 답변해 주세요.\n\n"
         "문맥:\n{context}\n\n"
         "질문: {query}\n\n"
-        "답변(관련 시점을 포함하여 상세히 작성):"
+        "답변(관련 시점을 반드시 [MM:SS] 또는 [HH:MM:SS] 형식으로 포함하여 상세히 작성):"
     )
     
     chain = prompt | llm
@@ -157,7 +157,7 @@ def get_global_rag_recommendation(query: str, k: int = 5) -> dict:
     
     prompt = PromptTemplate.from_template(
         "사용자가 전체 영상 기록을 대상으로 질문했습니다. 아래에 제공된 검색된 영상 자막 문맥만을 기반으로 답변해 주세요.\n"
-        "답변 내용에는 가급적 관련 정보가 위치한 비디오 ID와 타임라인을 명시하여 출처를 밝혀주세요.\n\n"
+        "답변 내용에는 가급적 관련 정보가 위치한 비디오 ID와 타임라인(반드시 [MM:SS] 또는 [HH:MM:SS] 형식)을 명시하여 출처를 밝혀주세요.\n\n"
         "문맥:\n{context}\n\n"
         "질문: {query}\n\n"
         "답변:"
